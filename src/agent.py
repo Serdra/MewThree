@@ -102,11 +102,11 @@ class Agent(Player):
         Returns:
             The result of the parent class's battle finished callback
         """
-        
+
         if self.do_data_collection:
             for data in self.game_log:
                 # battle.won contributed by Brian
-                data.set_reward(1 if battle.won else -1)
+                data.set_reward(1 if battle.won else 0)
 
             self.game_log.clear()
             
