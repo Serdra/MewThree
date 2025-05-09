@@ -88,7 +88,7 @@ class Agent(Player):
         # Random move for now, this will be improved later
         move = self.choose_random_move(battle)
 
-        if self.do_data_collection:
+        if self.do_data_collection and hasattr(move, "order"):
             self.game_log.append(DataPoint(battle, move))
         return move
     
@@ -102,7 +102,7 @@ class Agent(Player):
         Returns:
             The result of the parent class's battle finished callback
         """
-        # Print how large the array is and how much memory it's taking up
+        
         if self.do_data_collection:
             for data in self.game_log:
                 # battle.won contributed by Brian

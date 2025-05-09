@@ -11,53 +11,52 @@ class PokemonData:
     Provides functionality to convert pokemon attributes into a tensor representation
     for machine learning models.
     """
-    def __init__(self, pokemon, is_our_pokemon):
+    def __init__(self, pokemon=None, is_our_pokemon=False):
         """
-        Initialize with data from an existing pokemon object.
+        Initialize a pokemon data object either from an existing pokemon object or with default values.
         
         Args:
-            pokemon: A pokemon object with all the required attributes
-            is_our_pokemon: Boolean flag indicating if this pokemon belongs to the player
+            pokemon: A pokemon object with all the required attributes. If None, empty pokemon will be created.
+            is_our_pokemon: Boolean flag indicating if this pokemon belongs to the player. Defaults to False.
         """
-        self.name = pokemon.name                                # 420 options
-        self.moves = pokemon.moves                              # 4 of 351 options
-        self.item = pokemon.item                                # 63 options
-        self.ability = pokemon.ability                          # 209 options
-        self.active = pokemon.active                            # Boolean
-        self.boosts = pokemon.boosts                            # 7 values
-        self.hp = pokemon.current_hp_fraction                   # 1 float in [0, 1]
-        self.effects = pokemon.effects                          # 224 options
-        self.fainted = pokemon.fainted                          # Boolean
-        self.is_terastallized = pokemon.is_terastallized        # Boolean
-        self.tera_type = pokemon.tera_type                      # One of 20
-        self.protect_counter = pokemon.protect_counter          # Int
-        self.revealed = pokemon.revealed                        # Boolean
-        self.status = pokemon.status                            # 1 of 7
-        self.status_counter = pokemon.status_counter            # Int
-        self.types = pokemon.types                              # 1-3 of 20
-        self.is_our_pokemon = is_our_pokemon                    # Boolean
-    
-    def __init__(self):
-        """
-        Initialize an empty pokemon data object with default values.
-        Used when creating a pokemon from scratch rather than from an existing object.
-        """
-        self.name = None
-        self.moves = []
-        self.item = None
-        self.ability = None
-        self.active = {"accurarcy": 0, "atk": 0, "def": 0, "evasion": 0, "spa": 0, "spd": 0, "spe": 0}
-        self.hp = 1.0
-        self.effects = {}
-        self.fainted = False
-        self.is_terastallized = False
-        self.tera_type = None
-        self.protect_counter = 0
-        self.revealed = False
-        self.status = None
-        self.status_counter = 0
-        self.types = None
-        self.is_our_pokemon = False
+        if pokemon is not None:
+            # Initialize with data from an existing pokemon object
+            self.name = pokemon.name                                # 420 options
+            self.moves = pokemon.moves                              # 4 of 351 options
+            self.item = pokemon.item                                # 63 options
+            self.ability = pokemon.ability                          # 209 options
+            self.active = pokemon.active                            # Boolean
+            self.boosts = pokemon.boosts                            # 7 values
+            self.hp = pokemon.current_hp_fraction                   # 1 float in [0, 1]
+            self.effects = pokemon.effects                          # 224 options
+            self.fainted = pokemon.fainted                          # Boolean
+            self.is_terastallized = pokemon.is_terastallized        # Boolean
+            self.tera_type = pokemon.tera_type                      # One of 20
+            self.protect_counter = pokemon.protect_counter          # Int
+            self.revealed = pokemon.revealed                        # Boolean
+            self.status = pokemon.status                            # 1 of 7
+            self.status_counter = pokemon.status_counter            # Int
+            self.types = pokemon.types                              # 1-3 of 20
+            self.is_our_pokemon = is_our_pokemon                    # Boolean
+        else:
+            # Initialize an empty pokemon data object with default values
+            self.name = None
+            self.moves = []
+            self.item = None
+            self.ability = None
+            self.boosts = {"accuracy": 0, "atk": 0, "def": 0, "evasion": 0, "spa": 0, "spd": 0, "spe": 0}  # Fixed typo in "accuracy"
+            self.active = False  # Fixed from the original which had boosts data in active
+            self.hp = 1.0
+            self.effects = {}
+            self.fainted = False
+            self.is_terastallized = False
+            self.tera_type = None
+            self.protect_counter = 0
+            self.revealed = False
+            self.status = None
+            self.status_counter = 0
+            self.types = None
+            self.is_our_pokemon = is_our_pokemon
     
     def return_tensor(self):
         """
