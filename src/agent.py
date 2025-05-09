@@ -1,7 +1,7 @@
 import poke_env
 from poke_env.player import Player
 from copy import deepcopy
-from dataformat import DataPoint
+from CustomDataset import DataPoint
 import sys
 
 
