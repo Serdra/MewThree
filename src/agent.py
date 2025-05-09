@@ -104,6 +104,10 @@ class Agent(Player):
         """
         # Print how large the array is and how much memory it's taking up
         if self.do_data_collection:
+            for data in self.game_log:
+                # battle.won contributed by Brian
+                data.set_reward(1 if battle.won else -1)
+
             self.game_log.clear()
             
         return super()._battle_finished_callback(battle)
