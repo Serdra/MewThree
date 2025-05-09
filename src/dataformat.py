@@ -2,6 +2,28 @@ import poke_env
 from poke_env.player import Player
 from copy import deepcopy
 
+
+class PokemonData:
+    def __init__(self, pokemon, is_our_pokemon):
+        self.name = pokemon.name                                # 420 options
+        self.moves = pokemon.moves                              # 4 of 351 options
+        self.item = pokemon.item                                # 62 options
+        self.ability = pokemon.ability                          # 208 options
+        self.active = pokemon.active                            # Boolean
+        self.boosts = pokemon.boosts                            # 8 values
+        self.hp = pokemon.current_hp_fraction                   # 1 float in [0, 1]
+        self.effects = pokemon.effects                          # 224 options
+        self.fainted = pokemon.fainted                          # Boolean
+        self.is_terastallized = pokemon.is_terastallized        # Boolean
+        self.tera_type = pokemon.tera_type                      # One of 20
+        self.protect_counter = pokemon.protect_counter          # Int
+        self.revealed = pokemon.revealed                        # Boolean
+        self.status = pokemon.status                            # 1 of 7
+        self.status_counter = pokemon.status_counter            # Int
+        self.types = pokemon.types                              # 1-3 of 20
+        self.is_our_pokemon = is_our_pokemon
+
+
 class DataPoint:
     """
     A class for storing battle state, move data, and associated reward for reinforcement learning.
@@ -15,7 +37,13 @@ class DataPoint:
             battle: The current battle state to store
             move: The move that was sampled/chosen for this battle state
         """
-        self.internal_battle = deepcopy(battle)  # Store a deep copy to prevent modification of the original battle
+        self.our_team = [
+            PokemonData(pokemon, True) for pokemon in battle.team.values()
+        ]
+        self.opp_team = [
+            PokemonData(pokemon, False) for pokemon in battle.opponent_team.values()
+        ]
+
         self.sampled_move = move
         self.reward = None  # Reward is initially unset
     

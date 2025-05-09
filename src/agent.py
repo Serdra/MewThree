@@ -104,15 +104,6 @@ class Agent(Player):
         """
         # Print how large the array is and how much memory it's taking up
         if self.do_data_collection:
-            import sys
-            log_size = len(self.game_log)
-            memory_usage = sys.getsizeof(self.game_log)
-            
-            # Calculate approximate memory for battle objects
-            for data_point in self.game_log:
-                memory_usage += sys.getsizeof(data_point)
-                
-            print(f"Battle finished. Game log contains {log_size} entries.")
-            print(f"Estimated memory usage: {memory_usage / 1024:.2f} KB")
+            self.game_log.clear()
             
         return super()._battle_finished_callback(battle)
