@@ -1,6 +1,5 @@
 import poke_env
-from poke_env.player import Player
-from copy import deepcopy
+import random
 from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices
 import torch
 
@@ -118,31 +117,56 @@ class PokemonData:
         head += 1
 
         return tensor
+    
+    @staticmethod
+    def get_tensor_length():
+        return (len(Pokemon_Indices.keys()) + 
+            len(Move_Indices.keys()) + 
+            len(Item_Indices.keys()) + 
+            len(Ability_Indices.keys()) + 
+            1 +                                                 # Is active
+            1 +                                                 # HP
+            1 +                                                 # Fainted
+            1 +                                                 # Revealed
+            1)                                                  # Is our pokemon
         
-
 
 class DataPoint:
     """
     A class for storing battle state, move data, and associated reward.
     """
 
-    def __init__(self, battle: poke_env.environment.battle.Battle, move):
+    def __init__(self, battle: poke_env.environment.battle.Battle):
         """
         Initialize a data sample with battle state and selected move.
         
         Args:
             battle: The current battle state to store
-            move: The move that was sampled/chosen for this battle state
         """
         self.our_team = [
             PokemonData(pokemon, True) for pokemon in battle.team.values()
         ]
+
         self.opp_team = [
             PokemonData(pokemon, False) for pokemon in battle.opponent_team.values()
         ]
 
-        self.sampled_move = move
+        while len(self.our_team) < 6:
+            self.our_team.append(PokemonData(None, True))
+        while len(self.opp_team) < 6:
+            self.opp_team.append(PokemonData(None, False))
+
+        self.sampled_move = None
         self.reward = None  # Reward is initially unset
+    
+    def set_reward(self, move):
+        """
+        Set the move made during the stored state.
+        
+        Args:
+            move: The move made
+        """
+        self.sampled_move = move
     
     def set_reward(self, reward):
         """
@@ -152,5 +176,67 @@ class DataPoint:
             reward: The reward value to associate with this state-action pair
         """
         self.reward = reward
-    
-    # TODO: Provide a function to convert state to pytorch tensor for neural network inferencing/input
+
+    def get_input(self):
+        """
+        Gets the input to pass to a neural network for the position. Indices 0 and 6 are reserved for active pokemon
+        if applicable. Indices 0-5 are our pokemon and 6-11 are the opponents. The order is randomized between all
+        non-active pokemon.
+        """
+        tensor = torch.empty(12, PokemonData.get_tensor_length())
+        
+        # Create copies of our team and opponent team for manipulation
+        our_team_copy = self.our_team.copy()
+        opp_team_copy = self.opp_team.copy()
+        
+        # Find and remove active Pokémon from our team
+        active_index_our = None
+        for i, pokemon in enumerate(our_team_copy):
+            if pokemon.active:
+                active_index_our = i
+                break
+        
+        # If we found an active Pokémon, put it at index 0
+        if active_index_our is not None:
+            active_pokemon = our_team_copy.pop(active_index_our)
+            tensor[0] = active_pokemon.return_tensor()
+        else:
+            # If no active Pokémon (shouldn't happen in normal gameplay), use first Pokémon
+            tensor[0] = our_team_copy.pop(0).return_tensor()
+        
+        # Find and remove active Pokémon from opponent team
+        active_index_opp = None
+        for i, pokemon in enumerate(opp_team_copy):
+            if pokemon.active:
+                active_index_opp = i
+                break
+        
+        # If we found an active Pokémon, put it at index 6
+        if active_index_opp is not None:
+            active_pokemon = opp_team_copy.pop(active_index_opp)
+            tensor[6] = active_pokemon.return_tensor()
+        else:
+            # If no active Pokémon (shouldn't happen in normal gameplay), use first Pokémon
+            tensor[6] = opp_team_copy.pop(0).return_tensor()
+        
+        # Randomize the order of remaining Pokémon in our team
+        random.shuffle(our_team_copy)
+        # Fill indexes 1-5 with our remaining Pokémon
+        for i in range(1, 6):
+            if i-1 < len(our_team_copy):
+                tensor[i] = our_team_copy[i-1].return_tensor()
+            else:
+                # This shouldn't happen if we properly pad the teams to 6
+                tensor[i] = PokemonData(None, True).return_tensor()
+        
+        # Randomize the order of remaining Pokémon in opponent team
+        random.shuffle(opp_team_copy)
+        # Fill indexes 7-11 with opponent's remaining Pokémon
+        for i in range(7, 12):
+            if i-7 < len(opp_team_copy):
+                tensor[i] = opp_team_copy[i-7].return_tensor()
+            else:
+                # This shouldn't happen if we properly pad the teams to 6
+                tensor[i] = PokemonData(None, False).return_tensor()
+        
+        return tensor
