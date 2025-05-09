@@ -2,7 +2,7 @@ import poke_env
 from poke_env.player import Player
 from copy import deepcopy
 
-class Data:
+class DataPoint:
     """
     A class for storing battle state, move data, and associated reward for reinforcement learning.
     """
