@@ -134,30 +134,39 @@ class Agent(Player):
         move = self.choose_random_move(battle)
 
         # There are some moves that don't play well and I haven't figured out how to deal with them
-        # so here we are
+        # so this accounts for that case
         if not hasattr(move, "order"):
             return move
 
         data = DataPoint(battle)
 
+        # (Move, Tera, Idx): (Prob)
+        moves = {
+
+        }
+        
         if self.uses_neural_network:
             policy, value = self.neural_network.forward(data.get_input())
 
-            # (Move, Tera, Idx): (Prob)
-            moves = {
-
-            }
             for move in battle.available_moves:
                 moves[(move, False, Move_Indices[move._id])] = policy[Move_Indices[move._id]].item()
                 if battle._can_tera:
                     moves[(move, True, Move_Indices[move._id] + Num_Moves)] = policy[Move_Indices[move._id] + Num_Moves].item()
             for move in battle.available_switches:
                 moves[(move, False, Pokemon_Indices[move.name] + 2 * Num_Moves)] = policy[Pokemon_Indices[move.name] + 2 * Num_Moves].item()
-            
-            result = sample_with_temperature(moves, 0.4)
+        # Uniform probability when not using neural networks
+        else:
+            for move in battle.available_moves:
+                moves[(move, False, Move_Indices[move._id])] = 1
+                if battle._can_tera:
+                    moves[(move, True, Move_Indices[move._id] + Num_Moves)] = 1
+            for move in battle.available_switches:
+                moves[(move, False, Pokemon_Indices[move.name] + 2 * Num_Moves)] = 1
+        
+        result = sample_with_temperature(moves, 0.4)
 
-            move = self.create_order(result[0], terastallize=result[1])
-            data.set_move(result[2])
+        move = self.create_order(result[0], terastallize=result[1])
+        data.set_move(result[2])
 
 
         if self.do_data_collection:
