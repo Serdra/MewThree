@@ -106,6 +106,7 @@ class Agent(Player):
         self.do_data_collection = False  # Flag to control data collection
         self.uses_neural_network = False
         self.game_log = []  # Store battle data points
+        self.temperature = 0.4
         
     def set_neural_network(self, neural_network):
         self.uses_neural_network = True
@@ -164,7 +165,7 @@ class Agent(Player):
             for move in battle.available_switches:
                 moves[(move, False, Pokemon_Indices[move.name] + 2 * Num_Moves)] = 1
         
-        result = sample_with_temperature(moves, 0.4)
+        result = sample_with_temperature(moves, self.temperature)
 
         move = self.create_order(result[0], terastallize=result[1])
         data.set_move(result[2])

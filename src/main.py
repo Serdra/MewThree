@@ -12,6 +12,8 @@ async def train_network():
     n1 = Network(PokemonData.get_tensor_length()).to('cuda')
     n2 = Network(PokemonData.get_tensor_length()).to('cuda')
 
+    torch.save(n2, "opp_net.pt")
+
     CDS = CustomDataset(50000)
     optimizer = torch.optim.SGD(
         n1.parameters(),
@@ -27,12 +29,17 @@ async def train_network():
     neural_player_2 = Agent()
     neural_player_2.set_neural_network(n2)
 
+    neural_player.temperature = 0.1
+    neural_player_2.temperature = 0.1
+
     # Prefills the dataset with 500 games
     neural_player.reset_battles()
-    await neural_player.battle_against(neural_player_2, n_battles=500)
+    await neural_player.battle_against(neural_player_2, n_battles=5)
     print(f"Learning player won {neural_player.n_won_battles}")
 
     neural_player.set_neural_network(n1)
+
+    neural_player.temperature = 0.4
 
     # Trains quickly
     Train(n1, CDS, optimizer, 16, 256, 'cuda')
@@ -43,7 +50,7 @@ async def train_network():
 
     # Learns for 15 minutes
     start_time = time.time()
-    while (time.time() - start_time) < 1800:
+    while True:
         await neural_player.battle_against(neural_player_2, n_battles=40)
 
         while CDS.samples_since_last_step > 256:
@@ -54,7 +61,13 @@ async def train_network():
             if num_steps % 100 == 0:
                 print(f"Steps: {num_steps}")
                 print(f"Elapsed: {time.time() - start_time:.2f} seconds\n")
+            
+            if num_steps % 500 == 0:
+                torch.save(n1, f"net_{num_steps}.pt")
     
+    
+    neural_player.temperature = 0.1
+
     neural_player.reset_battles()
     await neural_player.battle_against(neural_player_2, n_battles=500)
     print(f"Learning player won {neural_player.n_won_battles}")
