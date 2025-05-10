@@ -232,6 +232,7 @@ ragingbull
 raindance
 rapidspin
 razorshell
+recharge
 recover
 reflect
 relicsong

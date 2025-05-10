@@ -87,7 +87,7 @@ class Network(nn.Module):
         # Policy head
         # Input shape: [batch_size, 12 * down_proj_size]
         # Output shape: [batch_size, num_moves * 2 + num_pokemon]
-        policy_output = self.policy(x_flat)
+        policy_output = torch.sigmoid(self.policy(x_flat))
         
         # Value head
         # Input shape: [batch_size, 12 * down_proj_size]

@@ -7,59 +7,42 @@ import random
 from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices, Num_Pokemon, Num_Abilities, Num_Items, Num_Moves
 
 
-def sample_with_temperature(data, temperature=1.0):
+def sample_with_temperature(d, temperature=1.0):
     """
-    Choose randomly from each key and index (0 or 1) based on probability formula.
+    Sample a key from dictionary d where probability is proportional to value^(1/temperature).
     
     Args:
-        data: Dictionary with keys mapped to tuples of two values in range [0, 1]
-        temperature: Controls the randomness of selection (default=1.0)
-                     Lower temperature makes selection more deterministic
-                     
+        d: Dictionary with keys and values in range (0, 1)
+        temperature: Temperature parameter controlling randomness
+                     - temperature > 0: Higher values make distribution more uniform
+                     - temperature = 0: Deterministic, selects key with highest value
+    
     Returns:
-        Tuple of (selected_key, selected_index)
+        A key from the dictionary
     """
-    # Special case for temperature = 0
+    # Handle edge case - empty dictionary
+    if not d:
+        raise ValueError("Dictionary cannot be empty")
+    
+    # Special case: temperature = 0 (deterministic)
     if temperature == 0:
-        # Find the key with the highest value in either position
-        max_key = None
-        max_index = None
-        max_value = -1
-        
-        for key, (val0, val1) in data.items():
-            if val0 > max_value:
-                max_value = val0
-                max_key = key
-                max_index = 0
-            if val1 > max_value:
-                max_value = val1
-                max_key = key
-                max_index = 1
-        
-        return max_key, max_index
+        return max(d.items(), key=lambda x: x[1])[0]
     
-    # Regular case with temperature > 0
-    options = []
-    weights = []
+    # Calculate weights based on formula: value^(1/temperature)
+    weights = {k: v ** (1 / temperature) for k, v in d.items()}
     
-    for key, (val0, val1) in data.items():
-        options.append((key, 0))
-        options.append((key, 1))
-        
-        # Apply temperature scaling using the formula value^(1/temperature)
-        weight0 = val0 ** (1 / temperature)
-        weight1 = val1 ** (1 / temperature)
-        
-        weights.append(weight0)
-        weights.append(weight1)
+    # Calculate total weight
+    total_weight = sum(weights.values())
     
-    # Normalize weights to sum to 1
-    total_weight = sum(weights)
-    normalized_weights = [w / total_weight for w in weights]
+    # Normalize weights
+    normalized_weights = {k: w / total_weight for k, w in weights.items()}
     
-    # Make random selection
-    selected_option = random.choices(options, weights=normalized_weights, k=1)[0]
-    return selected_option
+    # Convert to list of (key, weight) for random.choices
+    items = list(normalized_weights.items())
+    keys, probs = zip(*items)
+    
+    # Sample based on calculated probabilities
+    return random.choices(keys, weights=probs, k=1)[0]
 
 
 class Agent(Player):
@@ -159,21 +142,24 @@ class Agent(Player):
         if self.uses_neural_network:
             policy, value = self.neural_network.forward(data.get_input())
 
+            # (Move, Tera, Idx): (Prob)
             moves = {
 
             }
             for move in battle.available_moves:
-                moves[move] = policy[Move_Indices[move._id]].item(), policy[Move_Indices[move._id] + Num_Moves].item()
+                moves[(move, False, Move_Indices[move._id])] = policy[Move_Indices[move._id]].item()
+                if battle._can_tera:
+                    moves[(move, True, Move_Indices[move._id] + Num_Moves)] = policy[Move_Indices[move._id] + Num_Moves].item()
             for move in battle.available_switches:
-                moves[move] = policy[Pokemon_Indices[move.name] + 2 * Num_Moves].item(), policy[Pokemon_Indices[move.name] + 2 * Num_Moves].item()
+                moves[(move, False, Pokemon_Indices[move.name] + 2 * Num_Moves)] = policy[Pokemon_Indices[move.name] + 2 * Num_Moves].item()
             
-            move, tera = sample_with_temperature(moves, 0.20)
+            result = sample_with_temperature(moves, 0.4)
 
-            move = self.create_order(move, terastallize=(tera == 1 and battle._can_tera))
+            move = self.create_order(result[0], terastallize=result[1])
+            data.set_move(result[2])
 
 
-        if self.do_data_collection and hasattr(move, "order"):
-            data.set_move(move)
+        if self.do_data_collection:
             self.game_log.append(DataPoint(battle))
         return move
     

@@ -9,9 +9,9 @@ from NeuralNetwork import Network
 async def run_battle(n_battles=100):
     n = Network(PokemonData.get_tensor_length())
     first_player = Agent()
+    second_player = Agent()
     first_player.set_data_collection(True)
     first_player.set_neural_network(n)
-    second_player = Agent()
     
     # Start timing
     start_time = time.time()
@@ -26,13 +26,10 @@ async def run_battle(n_battles=100):
     
     # Calculate battles per second
     battles_per_second = n_battles / elapsed_time
-
+    
+    print(f"Neural player won {first_player.n_won_battles} battles")
     print(f"Total battles: {n_battles}")
     print(f"Time elapsed: {elapsed_time:.2f} seconds")
 
 if __name__ == "__main__":
-    print(len(Pokemon_Indices.keys()))
-    print(len(Ability_Indices.keys()))
-    print(len(Item_Indices.keys()))
-    print(len(Move_Indices.keys()))
     asyncio.run(run_battle(500))
