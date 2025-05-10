@@ -144,9 +144,10 @@ class Agent(Player):
         moves = {
 
         }
-        
+
         if self.uses_neural_network:
-            policy, value = self.neural_network.forward(data.get_input())
+            policy, value = self.neural_network.forward(data.get_input().to('cuda'))
+            policy = policy.to('cpu')
 
             for move in battle.available_moves:
                 moves[(move, False, Move_Indices[move._id])] = policy[Move_Indices[move._id]].item()

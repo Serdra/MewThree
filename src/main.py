@@ -7,7 +7,7 @@ from CustomDataset import PokemonData, CustomDataset
 from NeuralNetwork import Network
 
 async def run_battle(n_battles=100):
-    n = Network(PokemonData.get_tensor_length())
+    n = Network(PokemonData.get_tensor_length()).to('cuda')
     CDS = CustomDataset(50000)
     first_player = Agent()
     second_player = Agent()
