@@ -79,7 +79,7 @@ class Network(nn.Module):
         
         # Flatten the tensor for the final linear layers
         # Reshape from [batch_size, 12, down_proj_size] to [batch_size, 12 * down_proj_size]
-        if x.dim == 3:
+        if x.shape[0] != 1 or x.shape[1] != 12 or x.shape[2] != 64:
             x_flat = x.reshape(batch_size, -1)
         else:
             x_flat = x.reshape(-1)
@@ -91,9 +91,8 @@ class Network(nn.Module):
         
         # Value head
         # Input shape: [batch_size, 12 * down_proj_size]
-        # Through value1: [batch_size, 32]
-        # Final output: [batch_size, 1]
-        value_hidden = nn.Mish()(self.value1(x_flat))
-        value_output = torch.sigmoid(self.value2(value_hidden))
+        # Output shape: [batch_size, 1]
+        value_output = self.value1(x_flat)
+        value_output = torch.tanh(self.value2(value_output))
         
         return policy_output, value_output

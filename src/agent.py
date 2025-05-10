@@ -169,9 +169,8 @@ class Agent(Player):
         move = self.create_order(result[0], terastallize=result[1])
         data.set_move(result[2])
 
-
         if self.do_data_collection:
-            self.game_log.append(DataPoint(battle))
+            self.game_log.append(data)
         return move
     
     def _battle_finished_callback(self, battle):

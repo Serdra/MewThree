@@ -66,34 +66,24 @@ class PokemonData:
             torch.Tensor: A binary vector representing the pokemon's attributes
                           for use in machine learning models
         """
-        tensor = torch.zeros([
-            len(Pokemon_Indices.keys()) + 
-            len(Move_Indices.keys()) + 
-            len(Item_Indices.keys()) + 
-            len(Ability_Indices.keys()) + 
-            1 +                                                 # Is active
-            1 +                                                 # HP
-            1 +                                                 # Fainted
-            1 +                                                 # Revealed
-            1                                                   # Is our pokemon
-        ])
+        tensor = torch.zeros(PokemonData.get_tensor_length())
 
         # One-hot encode the pokemon name
         tensor[Pokemon_Indices[self.name]] = 1
-        head = len(Pokemon_Indices.keys())
+        head = Num_Pokemon
 
         # One-hot encode each move the pokemon has
         for move in self.moves:
             tensor[Move_Indices[move] + head] = 1
-        head += len(Move_Indices.keys())
+        head += Num_Moves
 
         # One-hot encode the held item
         tensor[Item_Indices[self.item] + head] = 1
-        head += len(Item_Indices.keys())
+        head += Num_Items
 
         # One-hot encode the ability
         tensor[Ability_Indices[self.ability] + head] = 1
-        head += len(Ability_Indices.keys())
+        head += Num_Abilities
 
         # Binary features
         if self.active:
@@ -121,10 +111,10 @@ class PokemonData:
     
     @staticmethod
     def get_tensor_length():
-        return (len(Pokemon_Indices.keys()) + 
-            len(Move_Indices.keys()) + 
-            len(Item_Indices.keys()) + 
-            len(Ability_Indices.keys()) + 
+        return (Num_Pokemon + 
+            Num_Abilities + 
+            Num_Items + 
+            Num_Moves + 
             1 +                                                 # Is active
             1 +                                                 # HP
             1 +                                                 # Fainted
