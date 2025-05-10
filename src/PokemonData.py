@@ -17,15 +17,19 @@ def _read_pokemon_data_from_files():
 
     # Read Pokemon data
     Pokemon_Indices[None] = 0  # Reserve 0 for None/unknown Pokemon
+    Pokemon_Indices[""] = 0
     pokemon_path = os.path.join(script_dir, "data", "pokemon.txt")
     with open(pokemon_path, "r") as file:
         for i, line in enumerate(file, 1):  # Start indices from 1
             pokemon_name = line.strip()
             if pokemon_name:  # Skip empty lines
+
+                # The library isn't always consistent on whether it uses lower or upper case names, so here's both
                 Pokemon_Indices[pokemon_name] = i
     
     # Read Ability data
     Ability_Indices[None] = 0  # Reserve 0 for None/unknown ability
+    Ability_Indices[""] = 0
     ability_path = os.path.join(script_dir, "data", "abilities.txt")
     with open(ability_path, "r") as file:
         for i, line in enumerate(file, 1):  # Start indices from 1
@@ -35,6 +39,7 @@ def _read_pokemon_data_from_files():
     
     # Read Move data
     Move_Indices[None] = 0  # Reserve 0 for None/unknown move
+    Move_Indices[""] = 0
     move_path = os.path.join(script_dir, "data", "moves.txt")
     with open(move_path, "r") as file:
         for i, line in enumerate(file, 1):  # Start indices from 1
@@ -44,6 +49,7 @@ def _read_pokemon_data_from_files():
     
     # Read Item data
     Item_Indices[None] = 0  # Reserve 0 for None/unknown item
+    Item_Indices[""] = 0
     item_path = os.path.join(script_dir, "data", "items.txt")
     with open(item_path, "r") as file:
         for i, line in enumerate(file, 1):  # Start indices from 1
@@ -53,3 +59,8 @@ def _read_pokemon_data_from_files():
 
 # Execute the function to load all data when module is imported
 _read_pokemon_data_from_files()
+
+Num_Pokemon = max(Pokemon_Indices.values())
+Num_Abilities = max(Ability_Indices.values())
+Num_Moves = max(Move_Indices.values())
+Num_Items = max(Item_Indices.values())

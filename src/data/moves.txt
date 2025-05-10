@@ -286,6 +286,7 @@ stoneedge
 storedpower
 strangesteam
 strengthsap
+struggle
 stunspore
 substitute
 suckerpunch

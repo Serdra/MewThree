@@ -1,6 +1,6 @@
 import poke_env
 import random
-from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices
+from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices, Num_Pokemon, Num_Abilities, Num_Items, Num_Moves
 import torch
 
 
@@ -159,7 +159,7 @@ class DataPoint:
         self.sampled_move = None
         self.reward = None  # Reward is initially unset
     
-    def set_reward(self, move):
+    def set_move(self, move):
         """
         Set the move made during the stored state.
         

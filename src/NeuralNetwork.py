@@ -1,27 +1,32 @@
 from CustomDataset import PokemonData, DataPoint
+from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices, Num_Pokemon, Num_Abilities, Num_Items, Num_Moves
 import torch
 import torch.nn as nn
 
 
 class Attention_Block(nn.Module):
-    def __init__(self, embed_dim=256, num_heads=8, mlp_dim=384):
+    def __init__(self, embed_dim=48, heads=4, mlp_dim=192):
         super(Attention_Block, self).__init__()
-        self.self_attn = nn.MultiheadAttention(embed_dim=embed_dim, heads=num_heads)
-        self.up_proj = nn.Linear(embed_dim, mlp_dim)
-        self.down_proj = nn.Linear(mlp_dim, embed_dim)
+        self.norm = nn.LayerNorm(embed_dim)
+        self.self_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=heads, batch_first=True)
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim, mlp_dim),
+            nn.Mish(),
+            nn.Linear(mlp_dim, embed_dim)
+        )
     
-    def forward(self, input):
-        activation = self.self_attn(input, input, input)
-
-        activation = self.up_proj(activation)
-        activation = nn.Mish()(activation)
-        activation = self.down_proj(activation)
-
-        return input + activation
+    def forward(self, x):
+        # Proper attention format with layer normalization
+        x_norm = self.norm(x)
+        x, _ = self.self_attn(x_norm, x_norm, x_norm)
+        
+        # MLP with residual connection
+        mlp_output = self.mlp(x_norm)
+        return x + mlp_output
 
 
 class Network(nn.Module):
-    def __init__(self, input_dim, embed_dim=256, num_heads=8, mlp_dim=384, num_moves=351, num_pokemon=420, down_proj_size=64):
+    def __init__(self, input_dim, embed_dim=256, num_heads=8, mlp_dim=384, down_proj_size=64):
         super(Network, self).__init__()
 
         self.embedding = nn.Linear(input_dim, embed_dim)
@@ -32,7 +37,7 @@ class Network(nn.Module):
 
         self.down_proj = nn.Linear(embed_dim, down_proj_size)
 
-        self.policy = nn.Linear(down_proj_size * 12, num_moves * 2 + num_pokemon)
+        self.policy = nn.Linear(down_proj_size * 12, Num_Moves * 2 + Num_Pokemon + 1)
 
         self.value1 = nn.Linear(down_proj_size * 12, 32)
         self.value2 = nn.Linear(32, 1)
@@ -74,7 +79,10 @@ class Network(nn.Module):
         
         # Flatten the tensor for the final linear layers
         # Reshape from [batch_size, 12, down_proj_size] to [batch_size, 12 * down_proj_size]
-        x_flat = x.reshape(batch_size, -1)
+        if x.dim == 3:
+            x_flat = x.reshape(batch_size, -1)
+        else:
+            x_flat = x.reshape(-1)
         
         # Policy head
         # Input shape: [batch_size, 12 * down_proj_size]
