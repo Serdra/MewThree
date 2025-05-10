@@ -1,7 +1,7 @@
 import poke_env
 from poke_env.player import Player
 from copy import deepcopy
-from CustomDataset import DataPoint
+from CustomDataset import DataPoint, CustomDataset
 import sys
 import random
 from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices, Num_Pokemon, Num_Abilities, Num_Items, Num_Moves
@@ -111,14 +111,15 @@ class Agent(Player):
         self.uses_neural_network = True
         self.neural_network = neural_network
     
-    def set_data_collection(self, do_data_collection: bool):
+    def set_data_collection(self, CDS: CustomDataset):
         """
         Enable or disable data collection during battles.
         
         Args:
             do_data_collection: True to enable data collection, False to disable
         """
-        self.do_data_collection = do_data_collection
+        self.do_data_collection = True
+        self.CDS = CDS
     
     def choose_move(self, battle):
         """
@@ -177,8 +178,9 @@ class Agent(Player):
         if self.do_data_collection:
             for data in self.game_log:
                 # battle.won contributed by Brian
-                data.set_reward(1 if battle.won else 0)
+                data.set_reward(1.0 if battle.won else 0.0)
 
+            self.CDS.add_samples(self.game_log)
             self.game_log.clear()
             
         return super()._battle_finished_callback(battle)

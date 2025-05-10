@@ -3,14 +3,15 @@ import asyncio
 from Agent import Agent
 import time
 from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices
-from CustomDataset import PokemonData
+from CustomDataset import PokemonData, CustomDataset
 from NeuralNetwork import Network
 
 async def run_battle(n_battles=100):
     n = Network(PokemonData.get_tensor_length())
+    CDS = CustomDataset(50000)
     first_player = Agent()
     second_player = Agent()
-    first_player.set_data_collection(True)
+    first_player.set_data_collection(CDS)
     first_player.set_neural_network(n)
     
     # Start timing
@@ -30,6 +31,7 @@ async def run_battle(n_battles=100):
     print(f"Neural player won {first_player.n_won_battles} battles")
     print(f"Total battles: {n_battles}")
     print(f"Time elapsed: {elapsed_time:.2f} seconds")
+    print(f"Samples gathered: {CDS.samples_since_last_step}")
 
 if __name__ == "__main__":
     asyncio.run(run_battle(500))

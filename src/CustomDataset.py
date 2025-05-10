@@ -2,6 +2,7 @@ import poke_env
 import random
 from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Indices, Num_Pokemon, Num_Abilities, Num_Items, Num_Moves
 import torch
+from typing import List, Tuple
 
 
 class PokemonData:
@@ -159,7 +160,7 @@ class DataPoint:
         self.sampled_move = None
         self.reward = None  # Reward is initially unset
     
-    def set_move(self, move):
+    def set_move(self, move: int):
         """
         Set the move made during the stored state.
         
@@ -168,7 +169,7 @@ class DataPoint:
         """
         self.sampled_move = move
     
-    def set_reward(self, reward):
+    def set_reward(self, reward: float):
         """
         Set the reward value for this battle state and move pair.
         
@@ -240,3 +241,63 @@ class DataPoint:
                 tensor[i] = PokemonData(None, False).return_tensor()
         
         return tensor
+
+
+class CustomDataset:
+    """
+    A fixed-size, ring-buffer dataset for storing and sampling data points.
+    
+    Used for experience replay in reinforcement learning, where older experiences
+    are overwritten when the buffer reaches capacity.
+    """
+    def __init__(self, size=50000):
+        """
+        Initialize an empty dataset with specified maximum size.
+        
+        Args:
+            size: Maximum number of samples to store in the dataset (default: 50000)
+        """
+        self.size = size
+        self.data = []            # List to store data points
+        self.head = 0             # Current position in the ring buffer
+        self.samples_since_last_step = 0  # Counter for tracking new samples
+    
+    def add_sample(self, sample: DataPoint) -> None:
+        """
+        Add a single data point to the dataset.
+        
+        If the dataset is not full, append the sample.
+        If the dataset is full, replace the oldest sample.
+        
+        Args:
+            sample: A DataPoint object to add to the dataset
+        """
+        if len(self.data) < self.size:
+            self.data.append(sample)
+        else:
+            self.data[self.head] = sample
+        
+        self.head += 1
+        self.head %= self.size  # Wrap around when reaching the end of the buffer
+        
+        self.samples_since_last_step += 1
+    
+    def add_samples(self, samples: List) -> None:
+        """
+        Add multiple data points to the dataset.
+        
+        Args:
+            samples: A list of DataPoint objects to add to the dataset
+        """
+        for sample in samples:
+            self.add_sample(sample)
+    
+    def get_sample(self) -> Tuple:
+        """
+        Randomly sample a data point from the dataset.
+        
+        Returns:
+            tuple: A tuple containing (input_data, sampled_move, reward)
+        """
+        sample = random.choice(self.data)
+        return sample.get_input(), sample.sampled_move, sample.reward
