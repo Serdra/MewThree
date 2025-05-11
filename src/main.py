@@ -187,4 +187,4 @@ async def train_network():
     print(f"Learning player won {neural_player.n_won_battles}")
     
 if __name__ == "__main__":
-    asyncio.run(train_network)
+    asyncio.run(train_network())
