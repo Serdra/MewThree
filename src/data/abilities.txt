@@ -134,6 +134,7 @@ regenerator
 rockhead
 rockypayload
 roughskin
+sandforce
 sandrush
 sandstream
 sapsipper
