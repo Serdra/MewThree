@@ -26,8 +26,12 @@ class Attention_Block(nn.Module):
 
 
 class Network(nn.Module):
-    def __init__(self, input_dim, embed_dim=256, num_heads=8, mlp_dim=384, down_proj_size=64):
+    def __init__(self, input_dim, embed_dim=256, num_heads=8, mlp_dim=384, down_proj_size=64, num_moves=Num_Moves, num_pokemon=Num_Pokemon):
         super(Network, self).__init__()
+        
+        # Store constants as instance variables
+        self.num_moves = num_moves
+        self.num_pokemon = num_pokemon
 
         self.embedding = nn.Linear(input_dim, embed_dim)
         self.positional_encoding = nn.Parameter(torch.randn(12, embed_dim))
@@ -37,7 +41,8 @@ class Network(nn.Module):
 
         self.down_proj = nn.Linear(embed_dim, down_proj_size)
 
-        self.policy = nn.Linear(down_proj_size * 12, Num_Moves * 2 + Num_Pokemon + 1)
+        # Use instance variables instead of global constants
+        self.policy = nn.Linear(down_proj_size * 12, self.num_moves * 2 + self.num_pokemon + 1)
 
         self.value1 = nn.Linear(down_proj_size * 12, 32)
         self.value2 = nn.Linear(32, 1)
@@ -93,6 +98,6 @@ class Network(nn.Module):
         # Input shape: [batch_size, 12 * down_proj_size]
         # Output shape: [batch_size, 1]
         value_output = self.value1(x_flat)
-        value_output = torch.tanh(self.value2(value_output))
+        value_output = torch.sigmoid(self.value2(value_output))
         
         return policy_output, value_output
