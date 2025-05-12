@@ -10,68 +10,6 @@ from Train import Train
 
 torch.serialization.add_safe_globals([Network])
 
-async def train_network():
-    n1 = Network(PokemonData.get_tensor_length()).to('cuda')
-
-    torch.save(n1.state_dict(), "net_0.pt")
-
-    CDS = CustomDataset(200000)
-    optimizer = torch.optim.SGD(
-        n1.parameters(),
-        lr=1e-4,
-        momentum=0.9,
-        nesterov=True,
-        weight_decay=1e-6
-    )
-    
-    neural_player = Agent(max_concurrent_battles=1)
-    neural_player.set_data_collection(CDS)
-
-    neural_player_2 = poke_env.MaxBasePowerPlayer(max_concurrent_battles=1)
-
-    neural_player.temperature = 0.1
-
-    # Prefills the dataset with 500 games
-    neural_player.reset_battles()
-    await neural_player.battle_against(neural_player_2, n_battles=250)
-    print(f"Learning player won {neural_player.n_won_battles}")
-
-    neural_player.set_neural_network(n1)
-
-    neural_player.temperature = 0.4
-
-    # Trains quickly
-    Train(n1, CDS, optimizer, 16, 256, 'cuda')
-
-    CDS.samples_since_last_step = 0
-
-    num_steps = 0
-
-    # Learns for 15 minutes
-    start_time = time.time()
-    while True:
-        await neural_player.battle_against(neural_player_2, n_battles=40)
-
-        while CDS.samples_since_last_step > 256:
-            CDS.samples_since_last_step -= 256
-            Train(n1, CDS, optimizer, 2, 256, 'cuda')
-        
-            if num_steps % 100 == 0 and num_steps != 0:
-                print(f"Steps: {num_steps}")
-                print(f"Elapsed: {time.time() - start_time:.2f} seconds\n")
-            
-            if num_steps % 500 == 0 and num_steps != 0:
-                torch.save(n1.state_dict(), f"net_{num_steps}.pt")
-                
-            num_steps += 1
-    
-    
-    neural_player.temperature = 0.1
-
-    neural_player.reset_battles()
-    await neural_player.battle_against(neural_player_2, n_battles=500)
-    print(f"Learning player won {neural_player.n_won_battles}")
-
 async def test_network(n_battles=1000):
     n1 = Network(PokemonData.get_tensor_length())
     # n2 = Network(PokemonData.get_tensor_length())
@@ -165,6 +103,8 @@ async def train_network():
     start_time = time.time()
     while True:
         await neural_player.battle_against(neural_player_2, n_battles=40)
+        neural_player.reset_battles()
+        neural_player_2.reset_battles()
 
         while CDS.samples_since_last_step > 256:
             CDS.samples_since_last_step -= 256
