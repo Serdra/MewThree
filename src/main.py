@@ -7,6 +7,7 @@ from PokemonData import Pokemon_Indices, Ability_Indices, Item_Indices, Move_Ind
 from CustomDataset import PokemonData, CustomDataset
 from NeuralNetwork import Network
 from Train import Train
+import cProfile
 
 torch.serialization.add_safe_globals([Network])
 
@@ -102,7 +103,8 @@ async def train_network():
     # Learns for 15 minutes
     start_time = time.time()
     while True:
-        await neural_player.battle_against(neural_player_2, n_battles=40)
+        with torch.no_grad():
+            await neural_player.battle_against(neural_player_2, n_battles=25)
         neural_player.reset_battles()
         neural_player_2.reset_battles()
 
